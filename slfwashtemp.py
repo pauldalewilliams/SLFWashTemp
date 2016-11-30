@@ -94,4 +94,4 @@ device_folder = glob.glob(base_dir + '28*')[0]
 device_file = device_folder + '/w1_slave'
 
 while True:
-    print "Average temp over last minute = {} F".(read_temp_oneminavg())
+    print "Average temp over last minute = {} F".format(read_temp_oneminavg())
