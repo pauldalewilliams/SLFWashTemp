@@ -20,7 +20,7 @@ twitter_cfg = {
 gmail_address = "VALUE"
 gmail_password = "VALUE"
 gmail_SMTP_server = "smtp.gmail.com"
-gmail_SMTP_port = 587 # Change to INT
+gmail_SMTP_port = 587
 
 # End VALUE change section
 
