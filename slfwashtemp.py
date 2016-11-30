@@ -77,6 +77,8 @@ def read_temp_oneminavg():
         if current_temp:
             readings += 1
             total += current_temp
+            current_time = time.asctime(time.localtime(time.time()))
+            print(current_time, " - Current temp = ", current_temp, "F")
         time.sleep(1)
     avg_temp = total / readings
     avg_temp = round(avg_temp, 0)
@@ -92,4 +94,4 @@ device_folder = glob.glob(base_dir + '28*')[0]
 device_file = device_folder + '/w1_slave'
 
 while True:
-    print(read_temp_oneminavg())
+    print("Average temp over last minute = ", read_temp_oneminavg(), "F")
