@@ -98,7 +98,7 @@ def monitor_temperature():
         if current_avg_temp >= 115:
             last_peak_time = current_epoch_time
             alert_sent = 0
-        elseif (current_epoch_time - last_peak_time) > 43200:
+        elseif (current_epoch_time - last_peak_time > 43200):
             if alert_sent == 0:
                 gmail_send("May Need to Wash Milk Pipes",
                            "It's been more than 12 hours since the milk wash pipe has been hot.  May need to check it or the Raspberry Pi.")
