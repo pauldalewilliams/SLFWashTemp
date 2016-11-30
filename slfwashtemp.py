@@ -8,21 +8,20 @@ import smtplib
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 
-# Change VALUEs below
+# Insert VALUEs below based on this config:
+#twitter_cfg = {
+#    "consumer_key":"VALUE",
+#    "consumer_secret":"VALUE",
+#    "access_token":"VALUE",
+#    "access_token_secret":"VALUE"
+#    }
+#
+#gmail_address = "VALUE"
+#gmail_password = "VALUE"
+#gmail_SMTP_server = "smtp.gmail.com"
+#gmail_SMTP_port = 587
 
-twitter_cfg = {
-    "consumer_key":"VALUE",
-    "consumer_secret":"VALUE",
-    "access_token":"VALUE",
-    "access_token_secret":"VALUE"
-    }
-
-gmail_address = "VALUE"
-gmail_password = "VALUE"
-gmail_SMTP_server = "smtp.gmail.com"
-gmail_SMTP_port = 587
-
-# End VALUE change section
+# End VALUEs section
 
 def twitter_get_api(cfg):
     auth = tweepy.OAuthHandler(cfg['consumer_key'], cfg['consumer_secret'])
@@ -65,9 +64,23 @@ def read_temp():
     if equals_pos != -1:
         temp_string = lines[1][equals_pos+2:]
         temp_c = float(temp_string) / 1000.0
+        temp_c = round(temp_c, 1)
         temp_f = temp_c * 9.0 / 5.0 + 32.0
+        temp_f = round(temp_f, 0)
         return temp_f
 
+def read_temp_oneminavg():
+    readings = 0.0
+    total = 0.0
+    for i in range(0, 60):
+        current_temp = read_temp()
+        if current_temp:
+            readings += 1
+            total += current_temp
+        time.sleep(1)
+    avg_temp = total / readings
+    avg_temp = round(avg_temp, 0)
+    return int(avg_temp)
 
 # Setup temperature sensor
 
@@ -79,5 +92,4 @@ device_folder = glob.glob(base_dir + '28*')[0]
 device_file = device_folder + '/w1_slave'
 
 while True:
-    print(read_temp())	
-    time.sleep(1)
+    print(read_temp_oneminavg())
