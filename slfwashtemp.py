@@ -72,14 +72,14 @@ def read_temp():
 def read_temp_oneminavg():
     readings = 0.0
     total = 0.0
-    for i in range(0, 60):
+    for i in range(0, 10):
         current_temp = read_temp()
         if current_temp:
             readings += 1
             total += current_temp
             current_time = time.asctime(time.localtime(time.time()))
             print "{} - Current temp = {} F".format(current_time, current_temp)
-        time.sleep(1)
+        time.sleep(6)
     avg_temp = total / readings
     avg_temp = round(avg_temp, 0)
     return int(avg_temp)
