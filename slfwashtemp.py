@@ -18,6 +18,7 @@ from email.MIMEText import MIMEText
 #
 #gmail_address = "VALUE"
 #gmail_password = "VALUE"
+#gmail_recipient = "VALUE"
 #gmail_SMTP_server = "smtp.gmail.com"
 #gmail_SMTP_port = 587
 
@@ -33,10 +34,10 @@ def twitter_send_tweet(tweet):
     status = api.update_status(status=tweet)
     return
 
-def gmail_send(toaddress, subject, body):
+def gmail_send(subject, body):
     msg = MIMEMultipart()
     msg['From'] = gmail_address
-    msg['To'] = toaddress
+    msg['To'] = gmail_recipient
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
     
@@ -45,7 +46,7 @@ def gmail_send(toaddress, subject, body):
     server.starttls()
     server.login(gmail_address, gmail_password)
     text = msg.as_string()
-    server.sendmail(gmail_address, toaddress, text)
+    server.sendmail(gmail_address, gmail_recipient, text)
     server.quit()
     return
 
@@ -78,11 +79,30 @@ def read_temp_oneminavg():
             readings += 1
             total += current_temp
             current_time = time.asctime(time.localtime(time.time()))
-            print "{} - Current temp = {} F".format(current_time, current_temp)
+            status = current_time + " - Current temp = " + str(current_temp) + "F"
+            print (status)
         time.sleep(6)
     avg_temp = total / readings
     avg_temp = round(avg_temp, 0)
     return int(avg_temp)
+
+def monitor_temperature():
+    last_peak_time = int(time.time())
+    alert_sent = 0
+    while True:
+        current_avg_temp = read_temp_oneminavg()
+        current_time = time.asctime(time.localtime(time.time()))
+        current_epoch_time = int(time.time())
+        tweet = str(current_avg_temp) + "F " + current_time
+        twitter_send_tweet(tweet)
+        if current_avg_temp >= 115:
+            last_peak_time = current_epoch_time
+            alert_sent = 0
+        elseif (current_epoch_time - last_peak_time) > 43200:
+            if alert_sent == 0:
+                gmail_send("May Need to Wash Milk Pipes",
+                           "It's been more than 12 hours since the milk wash pipe has been hot.  May need to check it or the Raspberry Pi.")
+                alert_sent = 1
 
 # Setup temperature sensor
 
@@ -93,5 +113,4 @@ base_dir = '/sys/bus/w1/devices/'
 device_folder = glob.glob(base_dir + '28*')[0]
 device_file = device_folder + '/w1_slave'
 
-while True:
-    print "Average temp over last minute = {} F".format(read_temp_oneminavg())
+monitor_temperature()
