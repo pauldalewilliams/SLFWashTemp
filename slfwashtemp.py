@@ -124,7 +124,8 @@ def monitor_temperature():
         current_min_temp, current_max_temp, current_avg_temp = read_temp_thirtyminstats()
         if current_avg_temp is None:
             while read_temp_oneminavg() == 0:
-                pass
+                time.sleep(10)
+            twitter_send_tweet("Looks like I'm getting temperature data now!  I'll post stats in 30 minutes.")
             continue
         current_time = time.asctime(time.localtime(time.time()))
         current_epoch_time = int(time.time())
