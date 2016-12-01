@@ -120,6 +120,7 @@ def read_temp_thirtyminstats():
 def monitor_temperature():
     last_peak_time = int(time.time())
     alert_sent = 0
+    twitter_send_tweet("Starting to monitor the temperature now.  I'll post stats in 30 minutes.")
     while True:
         current_min_temp, current_max_temp, current_avg_temp = read_temp_thirtyminstats()
         if current_avg_temp is None:
@@ -133,14 +134,15 @@ def monitor_temperature():
         twitter_send_tweet(tweet)
         if current_max_temp >= 115:
             last_peak_time = current_epoch_time
+            twitter_send_tweet("Wash cycle ran in the last 30 minutes.  Ready for the next milking!")
             if alert_sent == 1:
-                gmail_send("Milk Pipes Have Been Washed!", 
-                           "It looks like the milk pipes have been washed after missing the last cycle, or my temperature sensor is finally working.")
+                gmail_send("Milk Pipe Has Been Washed!", 
+                           "It looks like the milk pipe has been washed after missing the last cycle, or my temperature sensor is finally working.")
             alert_sent = 0
         elif current_epoch_time - last_peak_time > 43200:
             if alert_sent == 0:
-                gmail_send("May Need to Wash Milk Pipes",
-                           "It's been more than 12 hours since the milk wash pipe has been hot.  May need to check on it or the Raspberry Pi.")
+                gmail_send("May Need to Wash Milk Pipe",
+                           "It's been more than 12 hours since the milk pipe has been washed.  Someone may have forgotten to run the wash cycle.  Better double check!")
                 alert_sent = 1
 
 # Setup temperature sensor
