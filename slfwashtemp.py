@@ -66,6 +66,8 @@ def read_temp():
     equals_pos = lines[1].find('t=')
     if equals_pos != -1:
         temp_string = lines[1][equals_pos+2:]
+        if int(temp_string) == 85000:
+            return None
         temp_c = float(temp_string) / 1000.0
         temp_c = round(temp_c, 1)
         temp_f = temp_c * 9.0 / 5.0 + 32.0
