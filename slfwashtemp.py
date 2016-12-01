@@ -111,7 +111,8 @@ def read_temp_thirtyminstats():
     avg_temp = total / readings
     avg_temp = round(avg_temp, 0)
     if avg_temp == 0:
-        twitter_send_tweet("No valid temperature readings for the past 30 minutes.  Please check me!")
+        tweet = "No valid temperature readings for the past 30 minutes.  Please check me! " + time.asctime(time.localtime(time.time()))
+        twitter_send_tweet(tweet)
         gmail_send("No Temperature Readings", "I haven't had a valid temperature reading for the past 30 minutes.  Better check on me!")
         return None, None, None
     else:
@@ -120,13 +121,15 @@ def read_temp_thirtyminstats():
 def monitor_temperature():
     last_peak_time = int(time.time())
     alert_sent = 0
-    twitter_send_tweet("Starting to monitor the temperature now.  I'll post stats in 30 minutes.")
+    tweet = "Starting to monitor the temperature now.  I'll post stats in 30 minutes. " + time.asctime(time.localtime(time.time()))
+    twitter_send_tweet(tweet)
     while True:
         current_min_temp, current_max_temp, current_avg_temp = read_temp_thirtyminstats()
         if current_avg_temp is None:
             while read_temp_oneminavg() == 0:
                 time.sleep(10)
-            twitter_send_tweet("Looks like I'm getting temperature data now!  I'll post stats in 30 minutes.")
+            tweet = "Looks like I'm getting temperature data now!  I'll post stats in 30 minutes. " + time.asctime(time.localtime(time.time()))
+            twitter_send_tweet(tweet)
             continue
         current_time = time.asctime(time.localtime(time.time()))
         current_epoch_time = int(time.time())
@@ -134,7 +137,8 @@ def monitor_temperature():
         twitter_send_tweet(tweet)
         if current_max_temp >= 115:
             last_peak_time = current_epoch_time
-            twitter_send_tweet("Wash cycle ran in the last 30 minutes.  Ready for the next milking!")
+            tweet = "Wash cycle ran in the last 30 minutes.  Ready for the next milking! " + time.asctime(time.localtime(time.time()))
+            twitter_send_tweet(tweet)
             if alert_sent == 1:
                 gmail_send("Milk Pipe Has Been Washed!", 
                            "It looks like the milk pipe has been washed after missing the last cycle, or my temperature sensor is finally working.")
@@ -147,6 +151,7 @@ def monitor_temperature():
 
 # Setup temperature sensor
 
+time.sleep(10)
 os.system('modprobe w1-gpio')
 os.system('modprobe w1-therm')
  
