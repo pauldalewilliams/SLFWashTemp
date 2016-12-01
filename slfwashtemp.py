@@ -88,22 +88,58 @@ def read_temp_oneminavg():
     avg_temp = round(avg_temp, 0)
     return int(avg_temp)
 
+def read_temp_thirtyminstats():
+    readings = 0.0
+    min_temp = 300
+    max_temp = 0
+    total = 0.0
+    for i in range(0, 300):
+        current_temp = read_temp()
+        if current_temp:
+            readings += 1
+            total += current_temp
+            if current_temp < min_temp:
+                min_temp = current_temp
+                print("New minimum temp")
+            if current_temp > max_temp:
+                max_temp = current_temp
+                print("New maximum temp")
+            current_time = time.asctime(time.localtime(time.time()))
+            status = current_time + " - Current temp = " + str(current_temp) + "F"
+            print(status)
+        time.sleep(6)
+    avg_temp = total / readings
+    avg_temp = round(avg_temp, 0)
+    if avg_temp == 0:
+        twitter_send_tweet("No valid temperature readings for the past 30 minutes.  Please check me!")
+        gmail_send("No Temperature Readings", "I haven't had a valid temperature reading for the past 30 minutes.  Better check on me!")
+        return None, None, None
+    else:
+        return int(min_temp), int(max_temp), int(avg_temp)
+
 def monitor_temperature():
     last_peak_time = int(time.time())
     alert_sent = 0
     while True:
-        current_avg_temp = read_temp_oneminavg()
+        current_min_temp, current_max_temp, current_avg_temp = read_temp_thirtyminstats()
+        if current_avg_temp is None:
+            while read_temp_oneminavg() == 0:
+                pass
+            continue
         current_time = time.asctime(time.localtime(time.time()))
         current_epoch_time = int(time.time())
-        tweet = str(current_avg_temp) + "F " + current_time
+        tweet = "Min = " + str(current_min_temp) + "F | Max = " + str(current_max_temp) + "F | Avg = " + str(current_avg_temp) + "F as of " + current_time + " during the past 30 minutes"
         twitter_send_tweet(tweet)
-        if current_avg_temp >= 115:
+        if current_max_temp >= 115:
             last_peak_time = current_epoch_time
+            if alert_sent == 1:
+                gmail_send("Milk Pipes Have Been Washed!", 
+                           "It looks like the milk pipes have been washed after missing the last cycle, or my temperature sensor is finally working.")
             alert_sent = 0
         elif current_epoch_time - last_peak_time > 43200:
             if alert_sent == 0:
                 gmail_send("May Need to Wash Milk Pipes",
-                           "It's been more than 12 hours since the milk wash pipe has been hot.  May need to check it or the Raspberry Pi.")
+                           "It's been more than 12 hours since the milk wash pipe has been hot.  May need to check on it or the Raspberry Pi.")
                 alert_sent = 1
 
 # Setup temperature sensor
