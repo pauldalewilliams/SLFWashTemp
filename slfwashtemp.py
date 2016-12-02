@@ -118,6 +118,8 @@ def read_temp_oneminavg():
             status = current_time + " - Current temp = " + str(current_temp) + "F"
             print(status)
         time.sleep(6)
+    if total == 0.0:
+        return None
     avg_temp = total / readings
     avg_temp = round(avg_temp, 0)
     return int(avg_temp)
@@ -142,15 +144,14 @@ def read_temp_thirtyminstats():
             status = current_time + " - Current temp = " + str(current_temp) + "F"
             print(status)
         time.sleep(6)
-    avg_temp = total / readings
-    avg_temp = round(avg_temp, 0)
-    if avg_temp == 0:
+    if total == 0.0:
         tweet = "No valid temperature readings for the past 30 minutes.  Please check me! " + time.asctime(time.localtime(time.time()))
         twitter_send_tweet(tweet)
         gmail_send("No Temperature Readings", "I haven't had a valid temperature reading for the past 30 minutes.  Better check on me!")
         return None, None, None
-    else:
-        return int(min_temp), int(max_temp), int(avg_temp)
+    avg_temp = total / readings
+    avg_temp = round(avg_temp, 0)
+    return int(min_temp), int(max_temp), int(avg_temp)
 
 def monitor_temperature():
     last_peak_time = int(time.time())
