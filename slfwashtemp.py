@@ -27,13 +27,23 @@ from email.MIMEText import MIMEText
 # End VALUEs section
 
 def twitter_get_api(cfg):
-    auth = tweepy.OAuthHandler(cfg['consumer_key'], cfg['consumer_secret'])
-    auth.set_access_token(cfg['access_token'], cfg['access_token_secret'])
+    try:
+        auth = tweepy.OAuthHandler(cfg['consumer_key'], cfg['consumer_secret'])
+        auth.set_access_token(cfg['access_token'], cfg['access_token_secret'])
+    except:
+        print("Unable to authorize Twitter API.")
+        return None
     return tweepy.API(auth)
 
 def twitter_send_tweet(tweet):
     api = twitter_get_api(twitter_cfg)
-    status = api.update_status(status=tweet)
+    if api is None:
+        print("Cannot send tweet without API authorization.")
+        return
+    try:
+        status = api.update_status(status=tweet)
+    except:
+        print("Could not update Twitter status.")
     return
 
 def gmail_send(subject, body):
@@ -43,26 +53,48 @@ def gmail_send(subject, body):
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
     
-    server = smtplib.SMTP(gmail_SMTP_server, gmail_SMTP_port)
-    server.ehlo()
-    server.starttls()
-    server.login(gmail_address, gmail_password)
-    text = msg.as_string()
-    server.sendmail(gmail_address, gmail_recipient, text)
-    server.quit()
+    try:
+        server = smtplib.SMTP(gmail_SMTP_server, gmail_SMTP_port)
+        server.ehlo()
+        server.starttls()
+        server.login(gmail_address, gmail_password)
+        text = msg.as_string()
+        server.sendmail(gmail_address, gmail_recipient, text)
+        server.quit()
+    except:
+        print("Could not send email.")
     return
 
+def setup_temp_sensor():
+    os.system('modprobe w1-gpio')
+    os.system('modprobe w1-therm')
+    base_dir = '/sys/bus/w1/devices/'
+    device_folder = glob.glob(base_dir + '28*')[0]
+    if device_folder:
+        device_file = device_folder + '/w1_slave'
+        return device_file
+    else:
+        return None
+
 def read_temp_raw():
-    f = open(device_file, 'r')
-    lines = f.readlines()
-    f.close()
+    try:
+        f = open(device_file, 'r')
+        lines = f.readlines()
+        f.close()
+    except:
+        print("Unable to read temperature sensor file.")
+        return None
     return lines
- 
+
 def read_temp():
     lines = read_temp_raw()
+    if lines is None:
+        return None
     while lines[0].strip()[-3:] != 'YES':
         time.sleep(0.2)
         lines = read_temp_raw()
+        if lines is None:
+            return None
     equals_pos = lines[1].find('t=')
     if equals_pos != -1:
         temp_string = lines[1][equals_pos+2:]
@@ -84,7 +116,7 @@ def read_temp_oneminavg():
             total += current_temp
             current_time = time.asctime(time.localtime(time.time()))
             status = current_time + " - Current temp = " + str(current_temp) + "F"
-            print (status)
+            print(status)
         time.sleep(6)
     avg_temp = total / readings
     avg_temp = round(avg_temp, 0)
@@ -152,13 +184,16 @@ def monitor_temperature():
                 alert_sent = 1
 
 # Setup temperature sensor
-
 time.sleep(10)
-os.system('modprobe w1-gpio')
-os.system('modprobe w1-therm')
- 
-base_dir = '/sys/bus/w1/devices/'
-device_folder = glob.glob(base_dir + '28*')[0]
-device_file = device_folder + '/w1_slave'
+sensor_alert_sent = 0
+device_file = setup_temp_sensor()
+while device_file is None:
+    tweet = "Temperature sensor doesn't appear to be present.  Please check me! I'll try again in 5 minutes. " + time.asctime(time.localtime(time.time()))
+    twitter_send_tweet(tweet)
+    if sensor_alert_sent == 0:
+        gmail_send("No Temperature Sensor", "I don't seem to have a temperature sensor present.  Better check on me!")
+        sensor_alert_sent == 1
+    time.sleep(300)
+    device_file = setup_temp_sensor()
 
 monitor_temperature()
