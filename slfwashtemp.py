@@ -9,18 +9,21 @@ from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 
 # Insert VALUEs below based on this config:
-#twitter_cfg = {
-#    "consumer_key":"VALUE",
-#    "consumer_secret":"VALUE",
-#    "access_token":"VALUE",
-#    "access_token_secret":"VALUE"
-#    }
-#
-#gmail_address = "VALUE"
-#gmail_password = "VALUE"
-#gmail_recipient = "VALUE"
-#gmail_SMTP_server = "smtp.gmail.com"
-#gmail_SMTP_port = 587
+# twitter_cfg = {
+#     "consumer_key":"VALUE",
+#     "consumer_secret":"VALUE",
+#     "access_token":"VALUE",
+#     "access_token_secret":"VALUE"
+#     }
+# 
+# gmail_address = "VALUE"
+# gmail_password = "VALUE"
+# gmail_recipient = "VALUE"
+# gmail_SMTP_server = "smtp.gmail.com"
+# gmail_SMTP_port = 587
+# 
+# hot_wash_temp = INT  # Temp in F
+# max_time_between_washes = INT  # Maximum time lapse between washes in seconds
 
 
 
@@ -170,7 +173,7 @@ def monitor_temperature():
         current_epoch_time = int(time.time())
         tweet = "Min = " + str(current_min_temp) + "F | Max = " + str(current_max_temp) + "F | Avg = " + str(current_avg_temp) + "F as of " + current_time + " during the past 30 minutes"
         twitter_send_tweet(tweet)
-        if current_max_temp >= 115:
+        if current_max_temp >= hot_wash_temp:
             last_peak_time = current_epoch_time
             tweet = "Wash cycle ran in the last 30 minutes.  Ready for the next milking! " + time.asctime(time.localtime(time.time()))
             twitter_send_tweet(tweet)
@@ -178,7 +181,7 @@ def monitor_temperature():
                 gmail_send("Milk Pipe Has Been Washed!", 
                            "It looks like the milk pipe has been washed after missing the last cycle, or my temperature sensor is finally working.")
             alert_sent = 0
-        elif current_epoch_time - last_peak_time > 43200:
+        elif current_epoch_time - last_peak_time > max_time_between_washes:
             if alert_sent == 0:
                 gmail_send("May Need to Wash Milk Pipe",
                            "It's been more than 12 hours since the milk pipe has been washed.  Someone may have forgotten to run the wash cycle.  Better double check!")
