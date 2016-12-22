@@ -183,8 +183,9 @@ def monitor_temperature():
             alert_sent = 0
         elif current_epoch_time - last_peak_time > max_time_between_washes:
             if alert_sent == 0:
-                gmail_send("May Need to Wash Milk Pipe",
-                           "It's been too long since the milk pipe has been washed.  Someone may have forgotten to run the wash cycle.  Better double check!")
+                max_time_between_washes_hours = max_time_between_washes // 3600
+                email_body = "It's been " + max_time_between_washes_hours + " hours since the milk pipe has been washed.  Someone may have forgotten to run the wash cycle.  Better double check!"
+                gmail_send("May Need to Wash Milk Pipe", email_body)
                 alert_sent = 1
 
 # Setup temperature sensor
