@@ -72,7 +72,10 @@ def setup_temp_sensor():
     os.system('modprobe w1-gpio')
     os.system('modprobe w1-therm')
     base_dir = '/sys/bus/w1/devices/'
-    device_folder = glob.glob(base_dir + '28*')[0]
+    try:
+        device_folder = glob.glob(base_dir + '28*')[0]
+    except:
+        print("Could not find device starting with 28.")
     if device_folder:
         device_file = device_folder + '/w1_slave'
         return device_file
